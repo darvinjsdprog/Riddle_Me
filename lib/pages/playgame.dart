@@ -16,8 +16,19 @@ class _PlayGameState extends State<PlayGame> {
   }
 
   @override
+  void dispose(){
+    this.dispose();
+    super.dispose();
+  }
+
+   @override
+   void initState(){
+    _config.setAllConfig();
+    super.initState();
+   }
+ 
+  @override
   Widget build(BuildContext context) {
-     _config.setAllConfig();
     gameconfig = ModalRoute.of(context).settings.arguments;
 
     return Scaffold(
@@ -26,10 +37,11 @@ class _PlayGameState extends State<PlayGame> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: BackButton(
+          onPressed: (){
+             Navigator.of(context)
+        .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+          },
         ),
-        actions: <Widget>[
-          //botones a la derecha
-        ],
       ),
       body: Center(
         child: Container(
@@ -65,7 +77,6 @@ class _PlayGameState extends State<PlayGame> {
                 padding: const EdgeInsets.fromLTRB(0, 15.0, 0, 10.0),
                 child: FlatButton(
                   onPressed: (){
-                    print('go to running game press');
                       navigateToRunGame(gameconfig);
                   }, 
                   textColor: Colors.blue[900],

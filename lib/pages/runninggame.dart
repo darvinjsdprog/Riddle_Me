@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:riddle_me/appConfiguration.dart';
 import 'package:riddle_me/models/contentofcategories.dart';
@@ -7,6 +8,7 @@ import 'package:riddle_me/models/gogame.dart';
 import 'package:riddle_me/models/points.dart';
 import 'package:riddle_me/models/team.dart';
 import 'package:sensors/sensors.dart';
+import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
 class RunningGame extends StatefulWidget {
@@ -29,6 +31,12 @@ class _RunningGameState extends State<RunningGame> {
   int roundtime;
   bool isgamerunning = false;
   bool isplaying = false;
+  bool isaPoint = false;
+  bool pointPressed = false;
+  int _animateDuration = 70;
+
+AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
+    
 
   List<ContentCategories> contentlist = [];
   List<Points> points = [];
@@ -46,6 +54,7 @@ class _RunningGameState extends State<RunningGame> {
             if (_start < 2) {
               timer.cancel();
               header = '';
+              handleSounds(false);
               isgamerunning = true;
                message = firstword;
               startTimer(false, firstword);
@@ -63,6 +72,9 @@ class _RunningGameState extends State<RunningGame> {
             } else {
               _startgame = _startgame - 1;
               header = _startgame.toString();
+              if(_startgame <= 15){
+                  handleSounds(true);
+              }
             }
           }
         },
@@ -70,25 +82,73 @@ class _RunningGameState extends State<RunningGame> {
     );
   }
 
-  void stopgame() {
+  void stopgame() async{
+    message = 'EL JUEGO TERMINO !';
+    await handleVibration(true, true);
     _isvisible = true;
     navigatetoScore();
   }
   
-  void goodpoint(){
-    savepoint(gameconfig.teams.first, message, true);
+  void goodpoint() async{
+      setState(() {
+      isaPoint = true;
+      pointPressed = true;
+      });
+    handleVibration(isaPoint, false);
+    await Future.delayed(Duration(milliseconds: _animateDuration), (){
+     savepoint(gameconfig.teams.first, message, true);
           message = contentlist[_random.nextInt(contentlist.length)]
                               .words
                               .toUpperCase();
-          print('Punto valido');
+                              print('Punto valido');
+    });     
   }
 
-  void badpoint(){
-    savepoint(gameconfig.teams.first, message, false);
+  void badpoint() async{
+      setState(() {
+      isaPoint = false;
+      pointPressed = true;
+      });
+    handleVibration(isaPoint, false);
+    await Future.delayed(Duration(milliseconds: _animateDuration), (){
+     savepoint(gameconfig.teams.first, message, false);
           message = contentlist[_random.nextInt(contentlist.length)]
                               .words
                               .toUpperCase();
           print('Punto invalido');
+    });
+    
+  }
+
+  Future<void> handleVibration(bool isPoint, bool gamefinish) async{
+    if(gameconfig != null){
+        if(gameconfig.setting.vibration == true){
+          if(await Vibration.hasVibrator()){
+            if(!gamefinish){
+              if(isPoint){
+               await Vibration.vibrate(duration: 500);
+              }else{
+               await Vibration.vibrate(duration: 750);
+              }
+            }
+            else{
+              await Vibration.vibrate(duration: 2000);
+            }
+          }
+        }
+      }
+  }
+
+  void handleSounds(bool willPlay) async{
+      if(gameconfig != null){
+        if(gameconfig.setting.sound == true){
+          if(willPlay){
+           await audioPlayer.resume();
+          }else {
+           await audioPlayer.release();
+          }
+        }
+      }
   }
 
   void navigatetoScore(){
@@ -119,15 +179,21 @@ class _RunningGameState extends State<RunningGame> {
 
   @override
   void initState() {
-    super.initState();
+    audioPlayer.setUrl('assets/TickTock.wav', isLocal: true);
+    audioPlayer.setReleaseMode(ReleaseMode.STOP);
     _config.setAllConfig();
     Wakelock.enable();
+    super.initState();
     bool issafe = true;
     double rotationlimit = 9.5;
+    bool isForhead = false;
 
     _streamSubscriptions
         .add(accelerometerEvents.listen((AccelerometerEvent event) {
-    
+         if(double.parse(event.z.toStringAsFixed(1))  < 2.0 && double.parse(event.z.toStringAsFixed(1)) > -2.0){
+           isForhead = true;
+         }
+
         if(!isgamerunning && gameconfig != null && contentlist.isNotEmpty){
         if(double.parse(event.x.toStringAsFixed(1))  == -9.8 || double.parse(event.x.toStringAsFixed(1)) == 9.8){
            message = '';
@@ -143,13 +209,15 @@ class _RunningGameState extends State<RunningGame> {
 
       if(isgamerunning && isplaying){
           if(event.z > rotationlimit){
-        if(issafe){
+        if(issafe && isForhead){
           issafe = false;
+          isForhead = false;
           badpoint();
         }
       } else if(event.z < -rotationlimit){
-        if(issafe){
+        if(issafe && isForhead){
           issafe = false;
+          isForhead = false;
           goodpoint();
         }
       } else if(event.z.abs() > rotationlimit / 2){
@@ -164,7 +232,8 @@ class _RunningGameState extends State<RunningGame> {
     gameconfig = ModalRoute.of(context).settings.arguments;
     Color teamcolor = gameconfig.teams.first.color;
     contentlist = getcontentofcategorie(gameconfig.categories.idcategorie);
-   
+    bool _animated = pointPressed;
+
     return Scaffold(
       backgroundColor: teamcolor.withOpacity(0.7),
       appBar: AppBar(
@@ -174,14 +243,17 @@ class _RunningGameState extends State<RunningGame> {
           visible: _isvisible,
           child: BackButton(),
         ),
-        title: Text(
-          header,
-          style: TextStyle(
-            fontSize: 30.0,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        title: Padding(
+          padding: const EdgeInsets.fromLTRB(50.0, 0, 0, 0),
+          child: Text(
+            header,
+            style: TextStyle(
+              fontSize: 30.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
         centerTitle: true,
       ),
@@ -193,14 +265,31 @@ class _RunningGameState extends State<RunningGame> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Container(
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 50.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  child: AnimatedDefaultTextStyle(
                     textAlign: TextAlign.center,
+                    onEnd: () {
+                      setState(() {
+                        pointPressed = false;
+                      });
+                    },
+                      duration: Duration(
+                        milliseconds: _animateDuration,
+                      ),
+                      style: _animated ? TextStyle(
+                        fontSize: 60.0,
+                        fontWeight: FontWeight.bold,
+                        color: isaPoint ? Colors.green : Colors.red,
+                      ) : TextStyle(
+                        fontSize: 45.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      softWrap: true,
+                      overflow: TextOverflow.clip,
+                      child: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ],

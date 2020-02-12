@@ -154,10 +154,15 @@ class _HomeState extends State<Home> {
     teams = resulteam;
   }
 
-  @override
-  Widget build(BuildContext context) {
+@override
+void initState() {
     //Take all the screen and set landscape
     _config.setAllConfig();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     //teams = teams.isNotEmpty ? teams : ModalRoute.of(context).settings.arguments;
     print('Corrio!');
     return Scaffold(
