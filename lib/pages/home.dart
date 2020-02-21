@@ -64,70 +64,70 @@ class _HomeState extends State<Home> {
         nombre: 'Música',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'music.png',
         estaActiva: true),
     Categories(
         idcategorie: 6,
         nombre: 'Celebridades',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'people.png',
         estaActiva: true),
     Categories(
         idcategorie: 7,
         nombre: 'Expresiones y acentos',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'languages.png',
         estaActiva: true),
     Categories(
         idcategorie: 8,
         nombre: 'Geografia',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'geographic.png',
         estaActiva: true),
     Categories(
         idcategorie: 9,
         nombre: 'Juegos',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'games.png',
         estaActiva: true),
     Categories(
         idcategorie: 10,
         nombre: 'Literatura',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'books.png',
         estaActiva: true),
     Categories(
         idcategorie: 11,
         nombre: 'Marcas',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'google.png',
         estaActiva: true),
         Categories(
             idcategorie: 12,
         nombre: 'Peliculas',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'movies.png',
         estaActiva: true),
         Categories(
             idcategorie: 13,
         nombre: 'Superheroes',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'superheroe.png',
         estaActiva: true),
         Categories(
             idcategorie: 14,
         nombre: 'Muñecos animados',
         descripcion:
             'Juega con palabras y oraciones de acciones que realizas en tu dia a dia',
-        urlLogo: 'sports.png',
+        urlLogo: 'animateddolls.png',
         estaActiva: true),
   ];
   Config _config = new Config();
@@ -163,8 +163,6 @@ void initState() {
 
   @override
   Widget build(BuildContext context) {
-    //teams = teams.isNotEmpty ? teams : ModalRoute.of(context).settings.arguments;
-    print('Corrio!');
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(

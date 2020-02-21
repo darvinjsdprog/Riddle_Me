@@ -1,6 +1,6 @@
 import 'package:riddle_me/models/categories.dart';
 import 'package:riddle_me/models/team.dart';
-import 'package:riddle_me/models/configuration.dart';
+import 'configuration.dart';
 
 class Gogame{
   List<Team> teams;

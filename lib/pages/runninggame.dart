@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audio_cache.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:riddle_me/appConfiguration.dart';
+import 'package:riddle_me/models/configuration.dart';
 import 'package:riddle_me/models/contentofcategories.dart';
 import 'package:riddle_me/models/gogame.dart';
 import 'package:riddle_me/models/points.dart';
@@ -19,6 +21,12 @@ class RunningGame extends StatefulWidget {
 class _RunningGameState extends State<RunningGame> {
   Config _config = new Config();
   Gogame gameconfig = new Gogame();
+  
+  static AudioCache audioCache = AudioCache();
+  AudioPlayer player = AudioPlayer();
+
+  Configuration _gamesetting = Configuration();
+
   ContentCategories cont = new ContentCategories();
   String message = 'Coloque el teléfono en la frente';
   String header = '';
@@ -34,9 +42,7 @@ class _RunningGameState extends State<RunningGame> {
   bool isaPoint = false;
   bool pointPressed = false;
   int _animateDuration = 70;
-
-AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
-    
+   
 
   List<ContentCategories> contentlist = [];
   List<Points> points = [];
@@ -54,7 +60,7 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
             if (_start < 2) {
               timer.cancel();
               header = '';
-              handleSounds(false);
+              handleSounds(false, 'TickTockSound.wav');
               isgamerunning = true;
                message = firstword;
               startTimer(false, firstword);
@@ -73,7 +79,7 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
               _startgame = _startgame - 1;
               header = _startgame.toString();
               if(_startgame <= 15){
-                  handleSounds(true);
+                  handleSounds(true, 'TickTockSound.wav');
               }
             }
           }
@@ -122,7 +128,7 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
 
   Future<void> handleVibration(bool isPoint, bool gamefinish) async{
     if(gameconfig != null){
-        if(gameconfig.setting.vibration == true){
+        if(_gamesetting.vibration == true){
           if(await Vibration.hasVibrator()){
             if(!gamefinish){
               if(isPoint){
@@ -139,16 +145,21 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
       }
   }
 
-  void handleSounds(bool willPlay) async{
+  void handleSounds(bool willPlay, String soundname) async{
+    try{
       if(gameconfig != null){
-        if(gameconfig.setting.sound == true){
+        if(_gamesetting.sound == true){
           if(willPlay){
-           await audioPlayer.resume();
+            await audioCache.play(soundname);
+            print(player);
           }else {
-           await audioPlayer.release();
+            
           }
         }
       }
+      }catch(e){
+        print(e);
+      } 
   }
 
   void navigatetoScore(){
@@ -179,8 +190,6 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
 
   @override
   void initState() {
-    audioPlayer.setUrl('assets/TickTock.wav', isLocal: true);
-    audioPlayer.setReleaseMode(ReleaseMode.STOP);
     _config.setAllConfig();
     Wakelock.enable();
     super.initState();
@@ -198,7 +207,7 @@ AudioPlayer audioPlayer = new AudioPlayer(mode: PlayerMode.LOW_LATENCY);
         if(double.parse(event.x.toStringAsFixed(1))  == -9.8 || double.parse(event.x.toStringAsFixed(1)) == 9.8){
            message = '';
           _isvisible = false;
-          _startgame = gameconfig.setting.roundtime + 1;
+          _startgame = _gamesetting.roundtime + 1;
           isgamerunning = true;
           String firstword = contentlist[_random.nextInt(contentlist.length)]
                                 .words
