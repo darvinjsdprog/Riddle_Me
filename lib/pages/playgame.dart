@@ -17,7 +17,6 @@ class _PlayGameState extends State<PlayGame> {
 
   @override
   void dispose(){
-    this.dispose();
     super.dispose();
   }
 
